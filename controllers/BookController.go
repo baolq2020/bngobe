@@ -4,9 +4,6 @@ import (
 	"../models"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"os"
-	"fmt"
 )
 
 // GET /books
@@ -14,7 +11,7 @@ import (
 func FindBooks(c *gin.Context) {
 	var books []models.Book
 	models.DB.Find(&books)
-	sendImagesToKafka()
+	// sendImagesToKafka()
 	c.JSON(http.StatusOK, gin.H{"data": books})
 }
 
@@ -89,42 +86,4 @@ func DeleteBook(c *gin.Context) {
 	models.DB.Delete(&book)
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-}
-
-func sendImagesToKafka(){
-
-	//Init to get request data
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": os.Getenv("KAFKA_HOST") + ":" + os.Getenv("KAFKA_PORT")})
-	if err != nil {
-		panic(err)
-
-	}
-
-	// Delivery report handler for produced messages
-	go func() {
-		for e := range p.Events() {
-			switch ev := e.(type) {
-			case *kafka.Message:
-				if ev.TopicPartition.Error != nil {
-					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
-				} else {
-					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
-				}
-			}
-		}
-	}()
-
-	// Produce messages to topic (asynchronously)
-	topic := os.Getenv("KAFKA_TOPIC_IMAGE")
-	_ = p.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          []byte("test"),
-	}, nil)
-
-	p.Flush(36000)
-	// Wait for message deliveries
-
-	//fmt.Print(data)
-	// _ = json.NewEncoder(w).Encode(ReqAiMsg)
-
 }

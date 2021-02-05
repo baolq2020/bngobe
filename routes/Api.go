@@ -19,6 +19,9 @@ func ApiRoutes(route *gin.Engine){
 			v1.POST("/books", controllers.CreateBook)
 			v1.PATCH("/books/:id", controllers.UpdateBook)
 			v1.DELETE("/books/:id", controllers.DeleteBook)
+
+			v1.POST("/detect/image", controllers.DetectImage)
+
 		}
 	}
 }
