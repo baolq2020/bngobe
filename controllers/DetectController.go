@@ -30,5 +30,6 @@ func DetectImage(c *gin.Context) {
 
 	services.SendImagesToKafka(encoded)
 
+
 	c.JSON(http.StatusOK, gin.H{"data": "success"})
 }
